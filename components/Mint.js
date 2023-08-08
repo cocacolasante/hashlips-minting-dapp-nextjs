@@ -4,6 +4,7 @@ import * as s from "./styles/globalStyles";
 import styled from "styled-components";
 import contractAbi from "../public/config/abi.json"
 import { ethers } from "ethers";
+import {networks} from "../public/config/networks/networks"
 
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
@@ -95,15 +96,17 @@ export const StyledLink = styled.a`
 `;
 
 function Mint() {
-    const MAX_SUPPLY=336
+    
     const [blockchainAccount, setBlockchainAccount] = useState()
     const [tokenCount, setTokenCount] = useState()
     const [claimingNft, setClaimingNft] = useState(false);
     const [feedback, setFeedback] = useState(`Click buy to mint your NFT.`);
     const [mintAmount, setMintAmount] = useState(1);
+    const [ network, setNetwork] = useState()
+
   // this is where i add in my smart contract data
   const [CONFIG, SET_CONFIG] = useState({
-    CONTRACT_ADDRESS: "0xeBE300BFB81779BD8C3fe821c04BC644852baD4c",
+    CONTRACT_ADDRESS: "0x984bc699Bb933a683083e9Da0800A0E7Dd257DD7",
     SCAN_LINK: "https://goerli.arbiscan.io/",
     NETWORK: {
       NAME: "Arbitrum Goerli",
@@ -161,7 +164,7 @@ function Mint() {
         
         const NFTContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, contractAbi, provider)
         const currentCount = await NFTContract.tokenCount()
-        setTokenCount(currentCount)
+        setTokenCount(currentCount.toString())
         return NFTContract
 
     }catch(err){
@@ -207,6 +210,22 @@ function Mint() {
       setBlockchainAccount(null)
     }
 
+    const chainId = await ethereum.request({method: "eth_chainId"})
+    console.log(chainId)
+
+    setNetwork(networks[chainId])
+
+    ethereum.on('chainChanged', handleChainChanged);
+
+    function handleChainChanged(_chainId) {
+        window.location.reload();
+    }
+
+    if(networks[chainId] !== "Arbitrum Goerli"){
+      alert("Please change network to Arbitrum")
+    }
+
+
     
   }
 
@@ -224,8 +243,8 @@ function Mint() {
   useEffect(() => {
     getConfig();
     checkIfWalletIsConnected()
-    fetchMintContractSigner()
-    fetchMintContractSigner()
+    
+    
   }, []);
 
   useEffect(()=>{
@@ -268,7 +287,7 @@ function Mint() {
               }}
             >
               {/* {data.totalSupply} / {MAX_SUPPLY} */}
-              MAX_SUPPLY: {MAX_SUPPLY}
+              {tokenCount} / MAX SUPPLY: {CONFIG.MAX_SUPPLY}
             </s.TextTitle>
             <s.TextDescription
               style={{
@@ -282,7 +301,7 @@ function Mint() {
             </s.TextDescription>
             <s.SpacerSmall />
             {/* Number(data.totalSupply) */}
-            {tokenCount >= MAX_SUPPLY ? (
+            {tokenCount >= CONFIG.MAX_SUPPLY ? (
               <>
                 <s.TextTitle
                   style={{ textAlign: "center", color: "var(--accent-text)" }}
