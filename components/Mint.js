@@ -97,8 +97,7 @@ export const StyledLink = styled.a`
 function Mint() {
     const MAX_SUPPLY=336
     const [blockchainAccount, setBlockchainAccount] = useState()
-    const [smartContractSigner, setSmartContractSigner] = useState(null)
-    const [providerSmartContract, setProviderSmartContract] = useState()
+    const [tokenCount, setTokenCount] = useState()
     const [claimingNft, setClaimingNft] = useState(false);
     const [feedback, setFeedback] = useState(`Click buy to mint your NFT.`);
     const [mintAmount, setMintAmount] = useState(1);
@@ -117,7 +116,7 @@ function Mint() {
     WEI_COST: "30000000000000000",
     DISPLAY_COST: 0.03,
     GAS_LIMIT: 285000,
-    MARKETPLACE: "OpenSea",
+    MARKETPLACE: "",
     MARKETPLACE_LINK: "",
     SHOW_BACKGROUND: true,
   });
@@ -132,25 +131,37 @@ function Mint() {
     setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
     setClaimingNft(true);
 
-    const NFTContract = await fetchMintContract()
+    const NFTContract = await fetchMintContractSigner()
     console.log(NFTContract)
-    let tx = await NFTContract.mint()
+    let tx = await NFTContract.mint({value: BigInt(CONFIG.WEI_COST)})
     let res = await tx.wait()
-    setClaimingNft(false)
     if(res.status == 1){
-        console.log(success)
+      console.log("success")
+      setClaimingNft(false)
     }else{
         console.log("mint failure")
     }
 
   };
 
-  const fetchMintContract = async () =>{
+  const fetchMintContractSigner = async () =>{
     try {
         const provider = new ethers.providers.Web3Provider(window.ethereum)
         const signer = provider.getSigner()
-        const NFTContract = new ethers.Contract(CONTRACT_ADDRESS, contractAbi, signer)
-        console.log(NFTContract)
+        const NFTContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, contractAbi, signer)
+        return NFTContract
+
+    }catch(err){
+        console.log(err)
+    }
+  }
+  const fetchTokenCount = async () =>{
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        
+        const NFTContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, contractAbi, provider)
+        const currentCount = await NFTContract.tokenCount()
+        setTokenCount(currentCount)
         return NFTContract
 
     }catch(err){
@@ -213,8 +224,13 @@ function Mint() {
   useEffect(() => {
     getConfig();
     checkIfWalletIsConnected()
-    fetchMintContract()
+    fetchMintContractSigner()
+    fetchMintContractSigner()
   }, []);
+
+  useEffect(()=>{
+    fetchTokenCount()
+  },[claimingNft])
 
   return (
     <s.Screen>
@@ -266,7 +282,7 @@ function Mint() {
             </s.TextDescription>
             <s.SpacerSmall />
             {/* Number(data.totalSupply) */}
-            {true >= MAX_SUPPLY ? (
+            {tokenCount >= MAX_SUPPLY ? (
               <>
                 <s.TextTitle
                   style={{ textAlign: "center", color: "var(--accent-text)" }}

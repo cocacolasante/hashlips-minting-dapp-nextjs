@@ -1,13 +1,6 @@
-# Sample Hardhat Project
+THIS IS A PORT OF HASHLIPS MINTING DAPP FOR NEXTJS AS WELL AS A BASIC FRAMEWORK FOR YOUR SMART CONTRACTS
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+MUST CHANGE FILES
+    public/config
+    public/images
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
